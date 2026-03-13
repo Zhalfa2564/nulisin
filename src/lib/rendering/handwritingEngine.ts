@@ -4,6 +4,17 @@
 
 import type { FontProfile, PaperTemplate, RenderOptions } from '@/types';
 
+// Generate a deterministic seed from a text string
+export const generateDeterministicSeed = (text: string): number => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash) || 12345;
+};
+
 // Seeded random number generator for consistent rendering
 class SeededRandom {
   private seed: number;
@@ -36,6 +47,7 @@ interface RenderContext {
   seed: number;
   scale: number;
   random: SeededRandom;
+  globalCharIndex: number; // For table random seeds
 }
 
 // Initialize canvas for rendering
@@ -131,22 +143,21 @@ const renderCharacter = (
   context: RenderContext,
   char: string,
   x: number,
-  y: number,
-  _fontSize: number
+  y: number
 ): number => {
   const { ctx, font } = context;
   const { jitterSettings } = font;
 
-  // Generate seeded random values for this character position
-  // This ensures same character at same position gets same jitter
-  const charSeed = Math.floor(x * 1000 + y);
+  // Use a stable sequential index for this character to prevent float-dependent glitches
+  const charSeed = context.globalCharIndex++;
   const localRandom = new SeededRandom(context.seed + charSeed);
 
-  // Apply jitter effects - more natural variation
-  const xOffset = localRandom.range(-jitterSettings.xJitter, jitterSettings.xJitter);
-  const yOffset = localRandom.range(-jitterSettings.yJitter, jitterSettings.yJitter);
-  const rotation = localRandom.range(-jitterSettings.rotationJitter, jitterSettings.rotationJitter);
-  const baselineShift = localRandom.range(-jitterSettings.baselineShift, jitterSettings.baselineShift);
+  // Apply jitter effects - toned down slightly (0.7x) for a neater, legible handwriting
+  const multiplier = 0.7; 
+  const xOffset = localRandom.range(-jitterSettings.xJitter, jitterSettings.xJitter) * multiplier;
+  const yOffset = localRandom.range(-jitterSettings.yJitter, jitterSettings.yJitter) * multiplier;
+  const rotation = localRandom.range(-jitterSettings.rotationJitter, jitterSettings.rotationJitter) * multiplier;
+  const baselineShift = localRandom.range(-jitterSettings.baselineShift, jitterSettings.baselineShift) * multiplier;
 
   // Save context for transformation
   ctx.save();
@@ -163,7 +174,7 @@ const renderCharacter = (
 
   // Return character width with spacing jitter
   const charWidth = getCharWidth(ctx, char);
-  const spacingJitter = localRandom.range(-jitterSettings.spacingJitter, jitterSettings.spacingJitter);
+  const spacingJitter = localRandom.range(-jitterSettings.spacingJitter, jitterSettings.spacingJitter) * multiplier;
   return charWidth + font.letterSpacing + spacingJitter;
 };
 
@@ -172,8 +183,7 @@ const renderLine = (
   context: RenderContext,
   line: string,
   startX: number,
-  startY: number,
-  fontSize: number
+  startY: number
 ): void => {
   let currentX = startX;
 
@@ -182,8 +192,9 @@ const renderLine = (
       // Handle space with slight variation
       const spaceWidth = context.ctx.measureText(' ').width;
       currentX += spaceWidth + context.font.letterSpacing;
+      context.globalCharIndex++; // Bumping index for spaces ensures consistent word seeds!
     } else {
-      currentX += renderCharacter(context, char, currentX, startY, fontSize);
+      currentX += renderCharacter(context, char, currentX, startY);
     }
   }
 };
@@ -193,34 +204,51 @@ const renderTextBlock = (
   context: RenderContext,
   text: string,
   zone: { x: number; y: number; width: number; height: number },
-  fontSize: number
+  fontSize: number,
+  isContentZone: boolean = false
 ): { rendered: boolean; overflow: boolean } => {
-  const { ctx, font } = context;
+  const { ctx, font, paper } = context;
 
   // Set font
   ctx.font = `${fontSize}px "${font.name}"`;
   ctx.fillStyle = '#2c3e50';
   ctx.textBaseline = 'alphabetic';
 
+  // Apply padding for content zone bounds
+  const effectivePadding = isContentZone ? paper.padding || { top: 0, right: 0, bottom: 0, left: 0 } : { top: 0, right: 0, bottom: 0, left: 0 };
+  const effectiveWidth = Math.max(0, zone.width - (effectivePadding.left + effectivePadding.right));
+  const effectiveHeight = Math.max(0, zone.height - (effectivePadding.top + effectivePadding.bottom));
+  const startX = zone.x + effectivePadding.left;
+  const startY = zone.y + effectivePadding.top;
+
   // Wrap text
-  const lines = wrapText(ctx, text, zone.width, font.letterSpacing);
-  const lineHeight = fontSize * font.lineHeightMultiplier;
+  const lines = wrapText(ctx, text, effectiveWidth, font.letterSpacing);
+  
+  // Enforce paper.lineHeight for content, fallback to font profile spacing for headers
+  const lineHeight = isContentZone && paper.lineHeight ? paper.lineHeight : (fontSize * font.lineHeightMultiplier);
 
   // Check for overflow
   const totalHeight = lines.length * lineHeight;
-  const overflow = totalHeight > zone.height;
+  const overflow = totalHeight > effectiveHeight;
 
   // Render lines
-  let currentY = zone.y + fontSize;
+  let currentY = startY + (isContentZone ? fontSize * 0.8 : fontSize); // align inside boundary
   
+  ctx.save();
+  // Clip to the actual zone bounds to prevent text characters from bleeding out into margins
+  ctx.beginPath();
+  ctx.rect(zone.x, zone.y, zone.width, zone.height);
+  ctx.clip();
+
   for (const line of lines) {
-    if (currentY > zone.y + zone.height) {
-      break; // Stop if exceeding zone height
+    if (currentY > startY + effectiveHeight) {
+      break; // Stop if exceeding effective zone height
     }
     
-    renderLine(context, line, zone.x, currentY, fontSize);
+    renderLine(context, line, startX, currentY);
     currentY += lineHeight;
   }
+  ctx.restore();
 
   return { rendered: true, overflow };
 };
@@ -258,6 +286,7 @@ export const renderHandwriting = async (
       seed,
       scale,
       random: new SeededRandom(seed),
+      globalCharIndex: 0,
     };
 
     let hasOverflow = false;
@@ -268,7 +297,8 @@ export const renderHandwriting = async (
         context,
         name,
         paper.zones.name,
-        font.defaultSize
+        font.defaultSize,
+        false
       );
       hasOverflow = hasOverflow || nameResult.overflow;
     }
@@ -279,7 +309,8 @@ export const renderHandwriting = async (
         context,
         date,
         paper.zones.date,
-        font.defaultSize * 0.9
+        font.defaultSize * 0.9,
+        false
       );
       hasOverflow = hasOverflow || dateResult.overflow;
     }
@@ -290,7 +321,8 @@ export const renderHandwriting = async (
         context,
         content,
         paper.zones.content,
-        font.defaultSize
+        font.defaultSize,
+        true
       );
       hasOverflow = hasOverflow || contentResult.overflow;
     }
@@ -329,11 +361,12 @@ export const generatePreview = async (
   }
 ): Promise<{ success: boolean; overflow?: boolean; error?: string }> => {
   const previewScale = options.previewScale || 0.5;
+  const deterministicSeed = generateDeterministicSeed(options.name + options.date + options.content);
   return renderHandwriting(canvas, {
     ...options,
     renderOptions: {
       scale: previewScale,
-      seed: 12345, // Fixed seed for preview consistency
+      seed: deterministicSeed, // Consistent seed
     },
   });
 };
@@ -346,11 +379,12 @@ export const generateExport = async (
   }
 ): Promise<{ success: boolean; overflow?: boolean; error?: string }> => {
   const exportScale = options.exportScale || 2;
+  const deterministicSeed = generateDeterministicSeed(options.name + options.date + options.content);
   return renderHandwriting(canvas, {
     ...options,
     renderOptions: {
       scale: exportScale,
-      seed: Date.now(), // Different seed for each export
+      seed: deterministicSeed, // Consistent seed matches preview
     },
   });
 };

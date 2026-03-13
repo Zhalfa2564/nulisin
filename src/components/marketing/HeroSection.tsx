@@ -5,6 +5,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -42,7 +43,7 @@ export const HeroSection: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <a href="/generator">
+              <Link to="/generator">
                 <Button
                   size="lg"
                   className="bg-amber-600 hover:bg-amber-700 text-white px-8 h-12 text-base group"
@@ -50,7 +51,7 @@ export const HeroSection: React.FC = () => {
                   Coba Sekarang
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </a>
+              </Link>
               <a href="#preview">
                 <Button
                   variant="outline"

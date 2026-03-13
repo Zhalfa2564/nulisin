@@ -14,6 +14,7 @@ import { defaultFonts } from '@/lib/fonts/defaultFonts';
 import { defaultPapers } from '@/lib/templates/defaultPapers';
 import { toast } from 'sonner';
 import { Pen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const GeneratorPage: React.FC = () => {
   // Form state
@@ -135,7 +136,7 @@ export const GeneratorPage: React.FC = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
               <Pen className="w-4 h-4 text-white" />
             </div>
@@ -143,20 +144,20 @@ export const GeneratorPage: React.FC = () => {
               <span className="font-semibold text-gray-900 leading-tight">Nulisin</span>
               <span className="text-[10px] text-gray-500 leading-tight">Generator Tulisan Tangan</span>
             </div>
-          </a>
+          </Link>
           <nav className="flex items-center gap-4">
-            <a
-              href="/"
+            <Link
+              to="/"
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               Beranda
-            </a>
-            <a
-              href="/generator"
+            </Link>
+            <Link
+              to="/generator"
               className="text-sm font-medium text-amber-600"
             >
               Generator
-            </a>
+            </Link>
           </nav>
         </div>
       </header>

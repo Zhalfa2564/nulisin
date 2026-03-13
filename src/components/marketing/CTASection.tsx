@@ -5,6 +5,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const CTASection: React.FC = () => {
   return (
@@ -33,7 +34,7 @@ export const CTASection: React.FC = () => {
           Langsung coba aja, gak perlu ribet. Ketik, pilih gaya, unduh. Selesai.
         </p>
 
-        <a href="/generator">
+        <Link to="/generator">
           <Button
             size="lg"
             className="bg-white text-amber-600 hover:bg-gray-100 px-10 h-14 text-lg font-semibold group shadow-xl shadow-black/10"
@@ -41,7 +42,7 @@ export const CTASection: React.FC = () => {
             Mulai Sekarang
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
-        </a>
+        </Link>
 
         <p className="text-white/70 text-sm mt-6">
           100% gratis • Tanpa watermark • Tanpa daftar

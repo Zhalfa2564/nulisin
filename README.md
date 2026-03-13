@@ -1,73 +1,29 @@
-# React + TypeScript + Vite
+# Nulisin - Generator Tulisan Tangan
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Project ini adalah aplikasi "Single Page Application (SPA)" berbasis React + Vite yang menge-generate tulisan tangan menjadi file gambar.
 
-Currently, two official plugins are available:
+## Panduan Deploy ke Static Hosting
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Karena Nulisin menggunakan sistem **Client-Side Routing** (Browser Router), Anda membutuhkan aturan "Rewrite" khusus agar server penerima tidak me-lempar halaman 404 (Not Found) saat pengunjung me-refresh rute sekunder seperti `/generator`.
 
-## React Compiler
+Pusat root file SPA ini diarahkan ke `/index.html`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Vercel
+Kami telah menyertakan sekumpulan instruksi *redirect* di dalam file konfigurasi spesifik Vercel.
+- File config: `vercel.json` (Aman disimpan di Repository)
+- Cara Deploy:
+  1. Login ke Vercel via Github
+  2. Import repository project ini
+  3. Framework Preset biarkan otomatis terdeteksi "Vite"
+  4. Klik Deploy.
+  Vercel akan otomatis membaca file `vercel.json` untuk fallback URL `/generator` ke `/index.html`.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 2. Firebase Hosting
+Jika mempublikasikan ke infrastruktur GCP/Firebase:
+- File config: `firebase.json` (Aman disimpan di Repository, folder publik menunjuk `dist`)
+- Cara Deploy:
+  1. Jalankan `npm run build` untuk memproduksi direktori lokal `/dist`.
+  2. Install firebase CLI secara global `npm install -g firebase-tools`
+  3. Ketik `firebase login` untuk mengotentikasi akun.
+  4. Ketik `firebase init hosting` dan arahkan direktori publik ke `dist`. (Saat ditanya 'Configure as a single-page app? (Y/N)' Jawab Y, meskipun `firebase.json` kami sudah mem-bypass aturan ini secara otomatis.)
+  5. Kirim file dengan perintah: `firebase deploy --only hosting`

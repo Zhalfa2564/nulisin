@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Check, AlertCircle, Settings, Image as ImageIcon } from 'lucide-react';
+import { X, Check, AlertCircle, Settings, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ import {
 
 interface PaperUploaderProps {
   onPaperAdded?: (paper: PaperTemplate) => void;
+  onPaperDeleted?: (paperId: string) => void;
 }
 
 const defaultZones = {
@@ -28,7 +29,7 @@ const defaultZones = {
   content: { x: 100, y: 180, width: 600, height: 800 },
 };
 
-export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) => {
+export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPaperDeleted }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +40,9 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
   const [paperName, setPaperName] = useState('');
   const [zones, setZones] = useState(defaultZones);
   const [lineHeight, setLineHeight] = useState(28);
+  const [padding, setPadding] = useState({ top: 40, right: 60, bottom: 40, left: 80 });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addPaper, papers: customPapers } = useCustomPapers();
+  const { addPaper, removePaper, papers: customPapers } = useCustomPapers();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -118,6 +120,23 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
   const handleSaveTemplate = useCallback(() => {
     if (!previewImage || !imageDimensions || !paperName.trim()) return;
 
+    if (imageDimensions.width <= 0 || imageDimensions.height <= 0) {
+      setError('Dimensi gambar tidak valid.');
+      return;
+    }
+
+    if (
+      zones.content.width < 100 || 
+      zones.content.height < 50 || 
+      zones.content.x < 0 || 
+      zones.content.y < 0 || 
+      zones.content.x + zones.content.width > imageDimensions.width || 
+      zones.content.y + zones.content.height > imageDimensions.height
+    ) {
+      setError('Area isi tidak valid atau melampaui batas kertas (lebar atau tinggi terlalu besar).');
+      return;
+    }
+
     const paperId = `custom-paper-${Date.now()}`;
     const paperTemplate: PaperTemplate = {
       id: paperId,
@@ -127,7 +146,7 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
       height: imageDimensions.height,
       zones,
       lineHeight,
-      padding: { top: 40, right: 60, bottom: 40, left: 80 },
+      padding,
       isCustom: true,
     };
 
@@ -140,7 +159,7 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
       height: imageDimensions.height,
       zones,
       lineHeight,
-      padding: { top: 40, right: 60, bottom: 40, left: 80 },
+      padding,
     });
 
     setSuccess(`Template "${paperName.trim()}" berhasil ditambahkan!`);
@@ -149,7 +168,8 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
     setPreviewImage(null);
     setPaperName('');
     setZones(defaultZones);
-  }, [previewImage, imageDimensions, paperName, zones, lineHeight, addPaper, onPaperAdded]);
+    setPadding({ top: 40, right: 60, bottom: 40, left: 80 });
+  }, [previewImage, imageDimensions, paperName, zones, lineHeight, padding, addPaper, onPaperAdded]);
 
   const updateZone = (zoneKey: keyof typeof zones, field: keyof ZoneConfig, value: number) => {
     setZones((prev) => ({
@@ -161,10 +181,23 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
     }));
   };
 
+  const updatePadding = (field: keyof typeof padding, value: number) => {
+    setPadding((prev) => ({ ...prev, [field]: value }));
+  };
+
   const clearMessages = useCallback(() => {
     setError(null);
     setSuccess(null);
   }, []);
+
+  const handleDelete = useCallback((id: string, name: string) => {
+    if (window.confirm(`Hapus template kertas "${name}"?`)) {
+      removePaper(id);
+      onPaperDeleted?.(id);
+      setSuccess(`Template "${name}" berhasil dihapus.`);
+      setError(null);
+    }
+  }, [removePaper, onPaperDeleted]);
 
   return (
     <div className="space-y-3">
@@ -248,14 +281,21 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
       {customPapers.length > 0 && (
         <div className="mt-4">
           <p className="text-xs font-medium text-gray-500 mb-2">Kertas Custom Tersimpan:</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             {customPapers.map((paper) => (
-              <span
+              <div
                 key={paper.id}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-md border border-amber-200"
+                className="flex items-center justify-between px-3 py-2 bg-amber-50 text-amber-700 text-sm rounded-md border border-amber-200"
               >
-                {paper.name}
-              </span>
+                <span className="truncate mr-2 font-medium">{paper.name}</span>
+                <button
+                  onClick={() => handleDelete(paper.id, paper.name)}
+                  className="text-red-400 hover:text-red-600 transition-colors shrink-0"
+                  title="Hapus template"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -368,6 +408,37 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded }) =>
                     />
                   </div>
                 ))}
+              </div>
+
+              {/* Padding */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Padding Area Isi (Atas, Kanan, Bawah, Kiri)</h4>
+                <div className="grid grid-cols-4 gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Atas"
+                    value={padding.top}
+                    onChange={(e) => updatePadding('top', parseInt(e.target.value) || 0)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Kanan"
+                    value={padding.right}
+                    onChange={(e) => updatePadding('right', parseInt(e.target.value) || 0)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Bawah"
+                    value={padding.bottom}
+                    onChange={(e) => updatePadding('bottom', parseInt(e.target.value) || 0)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Kiri"
+                    value={padding.left}
+                    onChange={(e) => updatePadding('left', parseInt(e.target.value) || 0)}
+                  />
+                </div>
               </div>
 
               {/* Legend */}

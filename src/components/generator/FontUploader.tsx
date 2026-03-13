@@ -3,22 +3,23 @@
 // ============================================
 
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Check, AlertCircle, FileType } from 'lucide-react';
+import { X, Check, AlertCircle, FileType, Trash2 } from 'lucide-react';
 import { validateFontFile } from '@/lib/fonts/defaultFonts';
 import { useCustomFonts } from '@/hooks/useLocalStorage';
 import type { FontProfile } from '@/types';
 
 interface FontUploaderProps {
   onFontAdded?: (font: FontProfile) => void;
+  onFontDeleted?: (fontId: string) => void;
 }
 
-export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded }) => {
+export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontDeleted }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addFont, fonts: customFonts } = useCustomFonts();
+  const { addFont, removeFont, fonts: customFonts } = useCustomFonts();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -92,7 +93,7 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded }) => {
 
           setSuccess(`Font "${fontName}" berhasil ditambahkan!`);
           onFontAdded?.(fontProfile);
-        } catch (fontError) {
+        } catch {
           setError('Gagal memuat font. Pastikan file font valid.');
         }
 
@@ -136,6 +137,15 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded }) => {
     setError(null);
     setSuccess(null);
   }, []);
+
+  const handleDelete = useCallback((id: string, name: string) => {
+    if (window.confirm(`Hapus font custom "${name}"?`)) {
+      removeFont(id);
+      onFontDeleted?.(id);
+      setSuccess(`Font "${name}" berhasil dihapus.`);
+      setError(null);
+    }
+  }, [removeFont, onFontDeleted]);
 
   return (
     <div className="space-y-3">
@@ -225,14 +235,21 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded }) => {
       {customFonts.length > 0 && (
         <div className="mt-4">
           <p className="text-xs font-medium text-gray-500 mb-2">Font Custom Tersimpan:</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2">
             {customFonts.map((font) => (
-              <span
+              <div
                 key={font.id}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded-md border border-amber-200"
+                className="flex items-center justify-between px-3 py-2 bg-amber-50 text-amber-700 text-sm rounded-md border border-amber-200"
               >
-                {font.name}
-              </span>
+                <span className="truncate mr-2 font-medium">{font.name}</span>
+                <button
+                  onClick={() => handleDelete(font.id, font.name)}
+                  className="text-red-400 hover:text-red-600 transition-colors shrink-0"
+                  title="Hapus font"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Pen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,12 +46,12 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 bg-amber-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
               <Pen className="w-4 h-4 text-white" />
             </div>
             <span className="font-semibold text-gray-900 text-lg">Nulisin</span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
@@ -67,11 +68,11 @@ export const Navbar: React.FC = () => {
 
           {/* CTA Button */}
           <div className="hidden md:block">
-            <a href="/generator">
+            <Link to="/generator">
               <Button className="bg-amber-600 hover:bg-amber-700 text-white">
                 Coba Sekarang
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -100,14 +101,14 @@ export const Navbar: React.FC = () => {
                   {link.label}
                 </button>
               ))}
-              <a
-                href="/generator"
+              <Link
+                to="/generator"
                 className="mt-2"
               >
-                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white" onClick={() => setIsMobileMenuOpen(false)}>
                   Coba Sekarang
                 </Button>
-              </a>
+              </Link>
             </nav>
           </div>
         )}

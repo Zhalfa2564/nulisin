@@ -94,6 +94,7 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
         setSelectedPaperId(draft.selectedPaperId);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleReset = useCallback(() => {
@@ -113,6 +114,12 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
     setSelectedFontId(font.id);
   }, [addCustomFont, setSelectedFontId]);
 
+  const handleFontDeleted = useCallback((fontId: string) => {
+    if (selectedFontId === fontId) {
+      setSelectedFontId(defaultFonts[0].id);
+    }
+  }, [selectedFontId, setSelectedFontId]);
+
   const handlePaperAdded = useCallback((paper: PaperTemplate) => {
     addCustomPaper({
       id: paper.id,
@@ -126,6 +133,12 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
     });
     setSelectedPaperId(paper.id);
   }, [addCustomPaper, setSelectedPaperId]);
+
+  const handlePaperDeleted = useCallback((paperId: string) => {
+    if (selectedPaperId === paperId) {
+      setSelectedPaperId(defaultPapers[0].id);
+    }
+  }, [selectedPaperId, setSelectedPaperId]);
 
   return (
     <div className="space-y-4">
@@ -256,8 +269,8 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
 
         {/* Kustom Tab */}
         <TabsContent value="kustom" className="space-y-4">
-          <FontUploader onFontAdded={handleFontAdded} />
-          <PaperUploader onPaperAdded={handlePaperAdded} />
+          <FontUploader onFontAdded={handleFontAdded} onFontDeleted={handleFontDeleted} />
+          <PaperUploader onPaperAdded={handlePaperAdded} onPaperDeleted={handlePaperDeleted} />
         </TabsContent>
       </Tabs>
 
