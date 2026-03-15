@@ -42,6 +42,7 @@ class SeededRandom {
 
 interface RenderContext {
   ctx: CanvasRenderingContext2D;
+  measureCtx: CanvasRenderingContext2D; // Scale-independent context for text measurement
   font: FontProfile;
   paper: PaperTemplate;
   seed: number;
@@ -92,6 +93,18 @@ export const drawPaperBackground = (
     
     img.src = paper.backgroundImage;
   });
+};
+
+// Create a scale-independent canvas for text measurement.
+// This guarantees measureText() returns identical values regardless
+// of the render canvas scale, preventing line-break differences
+// between preview (0.5x) and export (2x).
+const createMeasureCanvas = (): CanvasRenderingContext2D => {
+  const c = document.createElement('canvas');
+  c.width = 1;
+  c.height = 1;
+  const ctx = c.getContext('2d')!;
+  return ctx;
 };
 
 // Get character width
@@ -246,12 +259,16 @@ const renderTextBlock = (
   fontSize: number,
   isContentZone: boolean = false
 ): { rendered: boolean; overflow: boolean } => {
-  const { ctx, font, paper } = context;
+  const { ctx, measureCtx, font, paper } = context;
 
-  // Set font
-  ctx.font = `${fontSize}px "${font.name}"`;
+  // Set font on BOTH the render context and the scale-independent
+  // measurement context.  Using measureCtx for wrapping guarantees
+  // identical line breaks at any canvas scale (Part B fix).
+  const fontString = `${fontSize}px "${font.name}"`;
+  ctx.font = fontString;
   ctx.fillStyle = '#2c3e50';
   ctx.textBaseline = 'alphabetic';
+  measureCtx.font = fontString;
 
   // Apply padding for content zone bounds
   const effectivePadding = isContentZone ? paper.padding || { top: 0, right: 0, bottom: 0, left: 0 } : { top: 0, right: 0, bottom: 0, left: 0 };
@@ -260,24 +277,32 @@ const renderTextBlock = (
   const startX = zone.x + effectivePadding.left;
   const startY = zone.y + effectivePadding.top;
 
-  // Wrap text
-  const lines = wrapText(ctx, text, effectiveWidth, font.letterSpacing);
+  // Wrap text using the scale-independent measurement context (Part B)
+  const lines = wrapText(measureCtx, text, effectiveWidth, font.letterSpacing);
   
   // Enforce paper.lineHeight for content, fallback to font profile spacing for headers
   const lineHeight = isContentZone && paper.lineHeight ? paper.lineHeight : (fontSize * font.lineHeightMultiplier);
 
-  // Check for overflow
-  const totalHeight = lines.length * lineHeight;
-  const overflow = totalHeight > effectiveHeight;
+  // Compute maximum visible lines and detect overflow accurately (Part C)
+  const maxVisibleLines = Math.max(1, Math.floor(effectiveHeight / lineHeight));
+  const overflow = lines.length > maxVisibleLines;
 
-  // Render lines
-  let currentY = startY + (isContentZone ? fontSize * 0.8 : fontSize); // align inside boundary
+  // First line baseline: use lineHeight-based offset so text aligns
+  // with the paper grid lines instead of using a magic fontSize multiplier
+  let currentY = startY + lineHeight * 0.85;
   
   ctx.save();
-  // Clip to the actual zone bounds to prevent text characters from bleeding out into margins
-  ctx.beginPath();
-  ctx.rect(zone.x, zone.y, zone.width, zone.height);
-  ctx.clip();
+  // Clip to the effective padded area, not the raw zone, so text
+  // that would exceed padding boundaries is truly invisible (Part C)
+  if (isContentZone) {
+    ctx.beginPath();
+    ctx.rect(startX, startY, effectiveWidth, effectiveHeight);
+    ctx.clip();
+  } else {
+    ctx.beginPath();
+    ctx.rect(zone.x, zone.y, zone.width, zone.height);
+    ctx.clip();
+  }
 
   for (const line of lines) {
     if (currentY > startY + effectiveHeight) {
@@ -317,9 +342,13 @@ export const renderHandwriting = async (
     // Draw background
     await drawPaperBackground(ctx, paper);
 
+    // Create a scale-independent canvas for text measurement (Part B)
+    const measureCtx = createMeasureCanvas();
+
     // Create render context
     const context: RenderContext = {
       ctx,
+      measureCtx,
       font,
       paper,
       seed,
