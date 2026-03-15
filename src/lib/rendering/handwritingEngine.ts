@@ -102,6 +102,29 @@ const getCharWidth = (
   return ctx.measureText(char).width;
 };
 
+// Hard-wrap a single word that exceeds maxWidth by splitting character-by-character
+const hardWrapWord = (
+  ctx: CanvasRenderingContext2D,
+  word: string,
+  maxWidth: number,
+  letterSpacing: number
+): string[] => {
+  const fragments: string[] = [];
+  let current = '';
+  for (const char of word) {
+    const test = current + char;
+    const testWidth = ctx.measureText(test).width + (test.length - 1) * letterSpacing;
+    if (testWidth > maxWidth && current) {
+      fragments.push(current);
+      current = char;
+    } else {
+      current = test;
+    }
+  }
+  if (current) fragments.push(current);
+  return fragments;
+};
+
 // Wrap text into lines that fit within maxWidth
 const wrapText = (
   ctx: CanvasRenderingContext2D,
@@ -119,6 +142,22 @@ const wrapText = (
     let currentLine = '';
     
     for (const word of words) {
+      // Handle single word wider than maxWidth
+      const wordWidth = ctx.measureText(word).width + (word.length - 1) * letterSpacing;
+      if (wordWidth > maxWidth) {
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+        const fragments = hardWrapWord(ctx, word, maxWidth, letterSpacing);
+        // Push all fragments except the last as complete lines
+        for (let i = 0; i < fragments.length - 1; i++) {
+          lines.push(fragments[i]);
+        }
+        currentLine = fragments[fragments.length - 1] || '';
+        continue;
+      }
+
       const testLine = currentLine ? currentLine + ' ' + word : word;
       const testWidth = ctx.measureText(testLine).width + (testLine.length - 1) * letterSpacing;
       

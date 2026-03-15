@@ -75,9 +75,12 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
         selectedFontId,
         selectedPaperId,
       });
-      setShowDraftSaved(true);
-      const timer = setTimeout(() => setShowDraftSaved(false), 2000);
-      return () => clearTimeout(timer);
+      // Only show "draft saved" indicator if there is actual text content
+      if (debouncedContent) {
+        setShowDraftSaved(true);
+        const timer = setTimeout(() => setShowDraftSaved(false), 2000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [debouncedName, debouncedDate, debouncedContent, selectedFontId, selectedPaperId, saveDraft]);
 

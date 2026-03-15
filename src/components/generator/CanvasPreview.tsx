@@ -91,9 +91,23 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
     }
   }, [name, date, content, font, paper, fontLoaded, onOverflow]);
 
-  // Render immediately on changes - no debounce for better responsiveness
+  // Debounce timer ref
+  const renderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Render with debounce to avoid excessive re-renders on every keystroke
   useEffect(() => {
-    render();
+    if (renderTimerRef.current) {
+      clearTimeout(renderTimerRef.current);
+    }
+    renderTimerRef.current = setTimeout(() => {
+      render();
+    }, 300);
+
+    return () => {
+      if (renderTimerRef.current) {
+        clearTimeout(renderTimerRef.current);
+      }
+    };
   }, [render]);
 
   // Calculate container styles based on paper aspect ratio

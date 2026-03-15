@@ -2,25 +2,27 @@
 // NULISIN - LOCAL STORAGE HOOKS
 // ============================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Generic local storage hook
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void, () => void] {
-  // Use a ref to hold the initial value so it doesn't change identity between renders.
-  // This prevents the infinite render loop caused by passing a new [] literal on each render.
-  const initialValueRef = useRef<T>(initialValue);
+  // Store the initial value in state so it is stable across renders and
+  // never re-evaluated.  This avoids the infinite render loop that would
+  // occur if callers pass a new literal (e.g. []) on every render while
+  // also satisfying the react-hooks/refs lint rule (no ref reads during render).
+  const [stableInitial] = useState<T>(() => initialValue);
 
   const [storedValue, setStoredValue] = useState<T>(() => {
     // Lazy initializer: runs ONCE on mount, not on every render.
     if (typeof window === 'undefined') {
-      return initialValueRef.current;
+      return stableInitial;
     }
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValueRef.current;
+      return item ? (JSON.parse(item) as T) : stableInitial;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValueRef.current;
+      return stableInitial;
     }
   });
 
@@ -45,17 +47,26 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(key);
       }
-      setStoredValue(initialValueRef.current);
+      setStoredValue(stableInitial);
     } catch (error) {
       console.warn(`Error removing localStorage key "${key}":`, error);
     }
-  }, [key]);
+  }, [key, stableInitial]);
 
   // Listen for changes from other tabs/windows
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === key && event.newValue) {
-        setStoredValue(JSON.parse(event.newValue));
+      if (event.key === key) {
+        if (event.newValue !== null) {
+          try {
+            setStoredValue(JSON.parse(event.newValue));
+          } catch {
+            console.warn(`Error parsing storage event for key "${key}"`);
+          }
+        } else {
+          // Item was removed from another tab — reset to initial value
+          setStoredValue(stableInitial);
+        }
       }
     };
 
