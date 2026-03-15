@@ -15,12 +15,14 @@ export const generateDeterministicSeed = (text: string): number => {
   return Math.abs(hash) || 12345;
 };
 
-// Seeded random number generator for consistent rendering
+// Seeded random number generator for consistent rendering.
+// Uses a Linear Congruential Generator with well-tested parameters.
 class SeededRandom {
   private seed: number;
 
   constructor(seed: number) {
-    this.seed = seed;
+    // Mix the seed to avoid correlated sequences when seeds differ by small amounts
+    this.seed = ((seed ^ 0xdeadbeef) >>> 0) % 233280 || 1;
   }
 
   // Linear Congruential Generator
@@ -190,26 +192,42 @@ const wrapText = (
   return lines;
 };
 
+// -----------------------------------------------------------
+// Jitter tuning constant: 0.65 produces neat, legible
+// handwriting while retaining natural imperfection.
+// Raise towards 1.0 for messier writing; lower towards 0 for
+// almost-typed appearance.  This multiplier is applied ON TOP
+// of each font profile's jitter settings.
+// -----------------------------------------------------------
+const JITTER_MULTIPLIER = 0.65;
+
 // Render a single character with natural jitter effects
 const renderCharacter = (
   context: RenderContext,
   char: string,
   x: number,
-  y: number
+  y: number,
+  fontSize: number
 ): number => {
   const { ctx, font } = context;
   const { jitterSettings } = font;
 
-  // Use a stable sequential index for this character to prevent float-dependent glitches
+  // Combine global seed with character index using a hash-style mix
+  // to avoid correlated sequences when globalCharIndex is large
   const charSeed = context.globalCharIndex++;
-  const localRandom = new SeededRandom(context.seed + charSeed);
+  const mixedSeed = ((context.seed * 2654435761 + charSeed * 40503) >>> 0);
+  const localRandom = new SeededRandom(mixedSeed);
 
-  // Apply jitter effects - toned down slightly (0.7x) for a neater, legible handwriting
-  const multiplier = 0.7; 
-  const xOffset = localRandom.range(-jitterSettings.xJitter, jitterSettings.xJitter) * multiplier;
-  const yOffset = localRandom.range(-jitterSettings.yJitter, jitterSettings.yJitter) * multiplier;
-  const rotation = localRandom.range(-jitterSettings.rotationJitter, jitterSettings.rotationJitter) * multiplier;
-  const baselineShift = localRandom.range(-jitterSettings.baselineShift, jitterSettings.baselineShift) * multiplier;
+  // Scale jitter proportionally to font size so small fonts get
+  // less absolute jitter and large fonts get proportionally more.
+  // Base reference size is 26px (the most common default).
+  const sizeRatio = fontSize / 26;
+  const m = JITTER_MULTIPLIER * sizeRatio;
+
+  const xOffset = localRandom.range(-jitterSettings.xJitter, jitterSettings.xJitter) * m;
+  const yOffset = localRandom.range(-jitterSettings.yJitter, jitterSettings.yJitter) * m;
+  const rotation = localRandom.range(-jitterSettings.rotationJitter, jitterSettings.rotationJitter) * JITTER_MULTIPLIER;
+  const baselineShift = localRandom.range(-jitterSettings.baselineShift, jitterSettings.baselineShift) * m;
 
   // Save context for transformation
   ctx.save();
@@ -224,10 +242,13 @@ const renderCharacter = (
   // Restore context
   ctx.restore();
 
-  // Return character width with spacing jitter
+  // Return character width with spacing jitter.
+  // Clamp spacing jitter so effective advance never goes negative
+  // (which would cause characters to overlap/reverse).
   const charWidth = getCharWidth(ctx, char);
-  const spacingJitter = localRandom.range(-jitterSettings.spacingJitter, jitterSettings.spacingJitter) * multiplier;
-  return charWidth + font.letterSpacing + spacingJitter;
+  const rawSpacingJitter = localRandom.range(-jitterSettings.spacingJitter, jitterSettings.spacingJitter) * JITTER_MULTIPLIER;
+  const advance = charWidth + font.letterSpacing + rawSpacingJitter;
+  return Math.max(advance, charWidth * 0.3); // floor at 30% of char width
 };
 
 // Render a line of text character by character
@@ -235,7 +256,8 @@ const renderLine = (
   context: RenderContext,
   line: string,
   startX: number,
-  startY: number
+  startY: number,
+  fontSize: number
 ): void => {
   let currentX = startX;
 
@@ -244,9 +266,9 @@ const renderLine = (
       // Handle space with slight variation
       const spaceWidth = context.ctx.measureText(' ').width;
       currentX += spaceWidth + context.font.letterSpacing;
-      context.globalCharIndex++; // Bumping index for spaces ensures consistent word seeds!
+      context.globalCharIndex++; // Bumping index for spaces ensures consistent word seeds
     } else {
-      currentX += renderCharacter(context, char, currentX, startY);
+      currentX += renderCharacter(context, char, currentX, startY, fontSize);
     }
   }
 };
@@ -309,7 +331,7 @@ const renderTextBlock = (
       break; // Stop if exceeding effective zone height
     }
     
-    renderLine(context, line, startX, currentY);
+    renderLine(context, line, startX, currentY, fontSize);
     currentY += lineHeight;
   }
   ctx.restore();

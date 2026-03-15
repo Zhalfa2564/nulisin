@@ -120,30 +120,76 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
   const handleSaveTemplate = useCallback(() => {
     if (!previewImage || !imageDimensions || !paperName.trim()) return;
 
-    if (imageDimensions.width <= 0 || imageDimensions.height <= 0) {
+    const w = imageDimensions.width;
+    const h = imageDimensions.height;
+
+    if (w <= 0 || h <= 0) {
       setError('Dimensi gambar tidak valid.');
       return;
     }
 
-    if (
-      zones.content.width < 100 || 
-      zones.content.height < 50 || 
-      zones.content.x < 0 || 
-      zones.content.y < 0 || 
-      zones.content.x + zones.content.width > imageDimensions.width || 
-      zones.content.y + zones.content.height > imageDimensions.height
-    ) {
-      setError('Area isi tidak valid atau melampaui batas kertas (lebar atau tinggi terlalu besar).');
+    // Check for duplicate paper name
+    if (customPapers.some((p) => p.name.toLowerCase() === paperName.trim().toLowerCase())) {
+      setError(`Template "${paperName.trim()}" sudah ada. Hapus dulu jika ingin mengunggah ulang.`);
       return;
     }
 
-    const paperId = `custom-paper-${Date.now()}`;
+    // Validate ALL zones — not just content
+    const zoneEntries: { key: string; label: string; zone: ZoneConfig }[] = [
+      { key: 'name', label: 'Area Nama', zone: zones.name },
+      { key: 'date', label: 'Area Tanggal', zone: zones.date },
+      { key: 'content', label: 'Area Isi', zone: zones.content },
+    ];
+
+    for (const { label, zone } of zoneEntries) {
+      if (zone.width <= 0 || zone.height <= 0) {
+        setError(`${label}: Lebar dan tinggi harus lebih dari 0.`);
+        return;
+      }
+      if (zone.x < 0 || zone.y < 0) {
+        setError(`${label}: Posisi X dan Y tidak boleh negatif.`);
+        return;
+      }
+      if (zone.x + zone.width > w || zone.y + zone.height > h) {
+        setError(`${label}: Area melampaui batas kertas (${w}×${h}px).`);
+        return;
+      }
+    }
+
+    // Validate content zone is large enough for at least a few lines
+    const effectiveContentWidth = zones.content.width - (padding.left + padding.right);
+    const effectiveContentHeight = zones.content.height - (padding.top + padding.bottom);
+
+    if (effectiveContentWidth < 80) {
+      setError('Area isi terlalu sempit setelah dikurangi padding kiri dan kanan. Perbesar area atau kurangi padding.');
+      return;
+    }
+    if (effectiveContentHeight < lineHeight) {
+      setError('Area isi terlalu pendek untuk satu baris teks. Perbesar area, kurangi padding, atau kurangi tinggi baris.');
+      return;
+    }
+
+    // Validate lineHeight sanity
+    if (lineHeight < 10 || lineHeight > 200) {
+      setError('Tinggi baris harus antara 10 dan 200 piksel.');
+      return;
+    }
+
+    // Check padding isn't consuming the entire zone
+    if (padding.top < 0 || padding.right < 0 || padding.bottom < 0 || padding.left < 0) {
+      setError('Padding tidak boleh negatif.');
+      return;
+    }
+
+    // Generate collision-resistant ID
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const paperId = `custom-paper-${Date.now()}-${randomSuffix}`;
     const paperTemplate: PaperTemplate = {
       id: paperId,
       name: paperName.trim(),
       backgroundImage: previewImage,
-      width: imageDimensions.width,
-      height: imageDimensions.height,
+      width: w,
+      height: h,
       zones,
       lineHeight,
       padding,
@@ -155,8 +201,8 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
       id: paperId,
       name: paperName.trim(),
       backgroundImage: previewImage,
-      width: imageDimensions.width,
-      height: imageDimensions.height,
+      width: w,
+      height: h,
       zones,
       lineHeight,
       padding,
@@ -169,7 +215,9 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
     setPaperName('');
     setZones(defaultZones);
     setPadding({ top: 40, right: 60, bottom: 40, left: 80 });
-  }, [previewImage, imageDimensions, paperName, zones, lineHeight, padding, addPaper, onPaperAdded]);
+    // Reset file input so the same file can be re-uploaded
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [previewImage, imageDimensions, paperName, zones, lineHeight, padding, addPaper, onPaperAdded, customPapers]);
 
   const updateZone = (zoneKey: keyof typeof zones, field: keyof ZoneConfig, value: number) => {
     setZones((prev) => ({

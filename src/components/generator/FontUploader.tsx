@@ -58,7 +58,17 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
 
         // Extract font name from filename
         const fontName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-        const fontId = `custom-font-${Date.now()}`;
+
+        // Check for duplicate font name
+        if (customFonts.some((f) => f.name.toLowerCase() === fontName.toLowerCase())) {
+          setError(`Font "${fontName}" sudah ada. Hapus dulu jika ingin mengunggah ulang.`);
+          setIsLoading(false);
+          return;
+        }
+
+        // Generate a stable, collision-resistant ID
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const fontId = `custom-font-${Date.now()}-${randomSuffix}`;
 
         // Create font profile
         const fontProfile: FontProfile = {
@@ -78,9 +88,11 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
           isCustom: true,
         };
 
-        // Load the font
+        // Load the font — pass data URL as ArrayBuffer source for
+        // reliable cross-browser handling (avoids url() escaping issues)
         try {
-          const fontFace = new FontFace(fontName, `url(${source})`);
+          const fontSource = source.startsWith('data:') ? source : `url(${source})`;
+          const fontFace = new FontFace(fontName, `url("${fontSource}")`);
           await fontFace.load();
           document.fonts.add(fontFace);
 
@@ -94,10 +106,12 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
           setSuccess(`Font "${fontName}" berhasil ditambahkan!`);
           onFontAdded?.(fontProfile);
         } catch {
-          setError('Gagal memuat font. Pastikan file font valid.');
+          setError('Gagal memuat font. Pastikan file font valid dan tidak corrupt.');
         }
 
         setIsLoading(false);
+        // Reset file input so the same file can be re-uploaded
+        if (fileInputRef.current) fileInputRef.current.value = '';
       };
 
       reader.onerror = () => {
@@ -110,7 +124,7 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
       setIsLoading(false);
     }
-  }, [addFont, onFontAdded]);
+  }, [addFont, onFontAdded, customFonts]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

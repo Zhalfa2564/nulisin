@@ -78,12 +78,16 @@ export const GeneratorPage: React.FC = () => {
     return getPaperById(selectedPaperId, customPaperTemplates);
   }, [selectedPaperId, customPaperTemplates]);
 
-  // Load custom fonts on mount
+  // Load custom fonts on mount — skip fonts already registered to
+  // avoid memory accumulation from duplicate FontFace objects
   useEffect(() => {
     const loadCustomFonts = async () => {
       for (const font of storedCustomFonts) {
+        // Skip if already loaded in this session
+        if (document.fonts.check(`16px "${font.name}"`)) continue;
         try {
-          const fontFace = new FontFace(font.name, `url(${font.source})`);
+          const fontSource = font.source.startsWith('data:') ? font.source : `url(${font.source})`;
+          const fontFace = new FontFace(font.name, `url("${fontSource}")`);
           await fontFace.load();
           document.fonts.add(fontFace);
         } catch (error) {
