@@ -2,7 +2,7 @@
 // NULISIN - SEO CONFIGURATION
 // ============================================
 
-const BASE_URL = 'https://nulisin.app';
+const BASE_URL = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/+$/, '') || 'https://nulisin.app';
 
 export const siteConfig = {
   name: 'Nulisin',

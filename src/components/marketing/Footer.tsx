@@ -12,12 +12,12 @@ export const Footer: React.FC = () => {
   const footerLinks = {
     product: [
       { label: 'Generator', href: '/generator' },
-      { label: 'Fitur', href: '#fitur' },
-      { label: 'Cara Kerja', href: '#cara-kerja' },
+      { label: 'Fitur', href: '/#fitur' },
+      { label: 'Cara Kerja', href: '/#cara-kerja' },
     ],
     resources: [
-      { label: 'FAQ', href: '#faq' },
-      { label: 'Use Case', href: '#use-case' },
+      { label: 'FAQ', href: '/#faq' },
+      { label: 'Use Case', href: '/#use-case' },
     ],
     legal: [
       { label: 'Kebijakan Privasi', href: '/privacy' },
@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
 
           {/* Resources links */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Resources</h4>
+            <h4 className="font-semibold text-white mb-4">Bantuan</h4>
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>

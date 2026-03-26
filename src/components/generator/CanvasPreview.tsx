@@ -36,7 +36,7 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   // Track overflow only when it first becomes true for a given content
   useEffect(() => {
     if (hasOverflow && !isLoading && !error) {
-      trackEvent('overflow_warning', { length: content.length });
+      trackEvent('overflow_warning');
     }
   }, [hasOverflow, isLoading, error, content.length]);
 

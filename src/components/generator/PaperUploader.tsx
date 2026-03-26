@@ -210,7 +210,7 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
     });
 
     setSuccess(`Template "${paperName.trim()}" berhasil ditambahkan!`);
-    trackEvent('save_custom_paper', { paper_name: paperName.trim() });
+    trackEvent('save_custom_paper');
     onPaperAdded?.(paperTemplate);
     setShowEditor(false);
     setPreviewImage(null);

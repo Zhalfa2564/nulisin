@@ -31,45 +31,45 @@ export const PrivacyPage: React.FC = () => {
 
           <div className="space-y-8 text-gray-700">
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Komitmen Kami pada Privasi</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Privasi Kamu, Prioritas Kami</h2>
               <p>
-                Di Nulisin, kami percaya bahwa privasi adalah hak Anda. Karena itu, kami merancang aplikasi ini dengan prinsip <strong>Privacy by Design</strong>. Semua proses penulisan tulisan tangan digital terjadi secara lokal di peramban (browser) Anda.
+                Nulisin dirancang dengan prinsip <strong>local-first</strong>. Artinya, semua proses — dari mengetik, memilih font, sampai menghasilkan gambar — terjadi langsung di browser kamu. Tidak ada yang dikirim ke server kami.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">2. Data yang Disimpan Secara Lokal</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">2. Data yang Tersimpan di Browser Kamu</h2>
               <p>
-                Aplikasi kami menyimpan beberapa data agar Anda bisa melanjutkan pekerjaan kapan saja. Data berikut ini disimpan <strong>sepenuhnya di memori lokal peramban Anda (localStorage)</strong> dan tidak pernah diunggah ke server kami:
+                Agar kamu bisa melanjutkan pekerjaan kapan saja, beberapa data disimpan di <strong>localStorage browser</strong> kamu — bukan di server kami:
               </p>
               <ul className="list-disc pl-5 mt-2 space-y-2">
-                <li><strong>Draft tulisan:</strong> Isi teks teks, nama, tanggal, serta pengaturan font dan kertas terakhir yang Anda gunakan.</li>
-                <li><strong>Font kustom:</strong> File font (.ttf, .otf, dll) yang Anda unggah.</li>
-                <li><strong>Kertas kustom:</strong> Template dan pengaturan zona gambar yang Anda buat.</li>
+                <li><strong>Draft tulisan:</strong> Nama, tanggal, isi teks, serta pilihan font dan kertas terakhir.</li>
+                <li><strong>Font kustom:</strong> File font (.ttf, .otf, dll) yang kamu unggah.</li>
+                <li><strong>Kertas kustom:</strong> Gambar template dan pengaturan area tulisan yang kamu buat.</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">3. Data yang Tidak Kami Kumpulkan</h2>
               <p>
-                Kami <strong>sama sekali tidak membaca, menyimpan, atau mengirimkan</strong> isi teks tulisan tangan, nama, maupun tanggal yang Anda ketikkan ke server mana pun (termasuk untuk analytics). Anda memegang kendali penuh atas karya Anda.
+                Kami <strong>tidak membaca, menyimpan, atau mengirim</strong> isi tulisan, nama, maupun tanggal yang kamu ketik. Bahkan sistem analytics kami pun tidak merekam konten tulisanmu. Data kamu sepenuhnya milik kamu.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">4. Analitik dan Pemantauan Layanan</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">4. Analytics & Pemantauan Error</h2>
               <p>
-                Untuk membantu kami meningkatkan layanan dan mengetahui terjadinya masalah (error), kami menggunakan layanan analitik anonim pihak ketiga (Google Analytics) serta sistem deteksi eror teknis (Sentry).
+                Kami menggunakan Google Analytics dan Sentry untuk memahami fitur mana yang paling sering dipakai dan mendeteksi error teknis. Data yang dikumpulkan hanya bersifat anonim: halaman yang dikunjungi, jenis perangkat, dan jejak error program.
               </p>
               <p className="mt-2">
-                Data yang dikumpulkan hanya bersifat metadata teknis, seperti: waktu kunjungan, jenis perangkat, rute halaman, dan rekam jejak eror program (crash logs). Sistem peringatan dini kami telah kami rancang dengan protokol ketat (masking) agar tidak merekam konten teks sensitif jika terjadi eror.
+                Tidak ada isi tulisan, nama file, atau konten personal yang masuk ke dalam data analytics maupun laporan error.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">5. Perubahan Kebijakan</h2>
               <p>
-                Seiring dengan bertambahnya fitur, kebijakan ini mungkin perlu diperbarui di masa mendatang. Penggunaan berkelanjutan Anda atas layanan ini menandakan pemahaman dan persetujuan Anda mengenai cara kami menangani privasi as-is saat ini.
+                Kebijakan ini bisa berubah seiring berkembangnya fitur Nulisin. Dengan terus menggunakan layanan ini, kamu menyetujui kebijakan privasi yang berlaku saat itu.
               </p>
             </section>
           </div>

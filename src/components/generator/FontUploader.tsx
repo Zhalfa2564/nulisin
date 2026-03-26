@@ -105,7 +105,7 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
           });
 
           setSuccess(`Font "${fontName}" berhasil ditambahkan!`);
-          trackEvent('upload_custom_font', { font_name: fontName });
+          trackEvent('upload_custom_font');
           onFontAdded?.(fontProfile);
         } catch (err) {
           captureError(err, { source: 'font_upload', font_name: fontName });
