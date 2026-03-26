@@ -200,7 +200,9 @@ export const checkImageDimensions = (
 ): Promise<{ valid: boolean; message?: string; width?: number; height?: number }> => {
   return new Promise((resolve) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
       if (img.width < minWidth || img.height < minHeight) {
         resolve({
           valid: false,
@@ -217,11 +219,12 @@ export const checkImageDimensions = (
       }
     };
     img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
       resolve({
         valid: false,
         message: 'Gagal membaca gambar. Pastikan file tidak corrupt.',
       });
     };
-    img.src = URL.createObjectURL(file);
+    img.src = objectUrl;
   });
 };

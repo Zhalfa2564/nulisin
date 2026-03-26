@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Pen, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -19,8 +20,8 @@ export const Footer: React.FC = () => {
       { label: 'Use Case', href: '#use-case' },
     ],
     legal: [
-      { label: 'Privasi', href: '#' },
-      { label: 'Syarat', href: '#' },
+      { label: 'Kebijakan Privasi', href: '/privacy' },
+      { label: 'Ketentuan Penggunaan', href: '/terms' },
     ],
   };
 
@@ -84,12 +85,12 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

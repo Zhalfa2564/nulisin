@@ -2,101 +2,104 @@
 // NULISIN - SEO CONFIGURATION
 // ============================================
 
-import type { SEOMeta } from '@/types';
+const BASE_URL = 'https://nulisin.app';
 
 export const siteConfig = {
   name: 'Nulisin',
   tagline: 'Generator Tulisan Tangan',
-  description: 'Ubah teks biasa jadi tulisan tangan digital yang natural, rapi, dan siap diunduh dalam hitungan detik.',
-  url: 'https://nulisin.app',
-  ogImage: '/og-image.png',
-  twitter: '@nulisin',
-  keywords: [
-    'generator tulisan tangan',
-    'tulisan tangan digital',
-    'tulisan tangan online',
-    'buat tulisan tangan online',
-    'generator handwriting',
-    'tulisan tangan indonesia',
-    'font tulisan tangan',
-    'kertas tulisan tangan digital',
-  ],
+  url: BASE_URL,
+  ogImage: `${BASE_URL}/og-image.png`,
+  themeColor: '#d97706',
+  locale: 'id_ID',
+  language: 'id',
 };
 
-export const generateMetaTags = (meta?: Partial<SEOMeta>) => {
-  const title = meta?.title || `${siteConfig.name} - ${siteConfig.tagline}`;
-  const description = meta?.description || siteConfig.description;
-  const keywords = meta?.keywords || siteConfig.keywords;
-  const ogImage = meta?.ogImage || `${siteConfig.url}${siteConfig.ogImage}`;
-  const canonicalUrl = meta?.canonicalUrl || siteConfig.url;
+export interface PageMeta {
+  title: string;
+  description: string;
+  canonical: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogType: string;
+}
 
-  return {
-    title,
-    description,
-    keywords: keywords.join(', '),
-    'og:title': title,
-    'og:description': description,
-    'og:image': ogImage,
-    'og:url': canonicalUrl,
-    'og:type': 'website',
-    'og:site_name': siteConfig.name,
-    'twitter:card': 'summary_large_image',
-    'twitter:title': title,
-    'twitter:description': description,
-    'twitter:image': ogImage,
-    'twitter:site': siteConfig.twitter,
-    canonical: canonicalUrl,
-  };
+export const pageMeta: Record<string, PageMeta> = {
+  home: {
+    title: 'Nulisin — Generator Tulisan Tangan Digital',
+    description:
+      'Nulisin membantu kamu mengubah teks biasa menjadi tulisan tangan digital yang natural, rapi, dan siap diunduh langsung dari browser.',
+    canonical: BASE_URL,
+    ogTitle: 'Nulisin — Generator Tulisan Tangan Digital',
+    ogDescription: 'Ketik aja, biar kelihatan kayak nulis.',
+    ogType: 'website',
+  },
+  generator: {
+    title: 'Generator Nulisin — Bikin Ketikan Terasa Seperti Tulisan Tangan',
+    description:
+      'Ketik isi tulisanmu, pilih font dan kertas, lalu unduh hasil tulisan tangan digital yang terlihat natural dengan Nulisin.',
+    canonical: `${BASE_URL}/generator`,
+    ogTitle: 'Generator Nulisin',
+    ogDescription: 'Bikin ketikan terasa seperti tulisan tangan.',
+    ogType: 'website',
+  },
+  privacy: {
+    title: 'Kebijakan Privasi — Nulisin',
+    description: 'Pelajari bagaimana Nulisin memproses tulisan tangan digital Anda secara lokal untuk menjaga privasi.',
+    canonical: `${BASE_URL}/privacy`,
+    ogTitle: 'Kebijakan Privasi Nulisin',
+    ogDescription: 'Pelajari bagaimana kami melindungi data Anda dengan pemrosesan lokal.',
+    ogType: 'website',
+  },
+  terms: {
+    title: 'Ketentuan Penggunaan — Nulisin',
+    description: 'Syarat dan ketentuan penggunaan Nulisin Generator Tulisan Tangan Digital.',
+    canonical: `${BASE_URL}/terms`,
+    ogTitle: 'Ketentuan Penggunaan Nulisin',
+    ogDescription: 'Syarat dan ketentuan penggunaan layanan generator.',
+    ogType: 'website',
+  },
 };
 
-export const pageMeta = {
-  home: generateMetaTags({
-    title: `${siteConfig.name} - ${siteConfig.tagline}`,
-    description: siteConfig.description,
-    canonicalUrl: siteConfig.url,
-  }),
-  generator: generateMetaTags({
-    title: `Generator - ${siteConfig.name}`,
-    description: 'Buat tulisan tangan digital kamu sendiri. Pilih font, pilih kertas, ketik, dan unduh hasilnya.',
-    canonicalUrl: `${siteConfig.url}/generator`,
-  }),
-};
-
-// Generate JSON-LD structured data
-export const generateStructuredData = () => {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: siteConfig.name,
-    description: siteConfig.description,
-    url: siteConfig.url,
-    applicationCategory: 'UtilityApplication',
-    operatingSystem: 'Any',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'IDR',
-    },
-    inLanguage: 'id',
-    audience: {
-      '@type': 'Audience',
-      audienceType: 'General',
-    },
-  };
-};
-
-// Generate FAQ structured data
-export const generateFAQStructuredData = (faqs: { question: string; answer: string }[]) => {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  };
-};
+// FAQ data shared between the component and JSON-LD
+export const faqData = [
+  {
+    question: 'Apakah Nulisin gratis?',
+    answer:
+      'Ya, Nulisin sepenuhnya gratis untuk digunakan. Tidak ada biaya tersembunyi atau langganan.',
+  },
+  {
+    question: 'Apakah tulisanku tersimpan di server?',
+    answer:
+      'Tidak. Semua proses terjadi di browser kamu. Teks dan hasil generate tidak dikirim ke server mana pun. Draft hanya tersimpan secara lokal di perangkatmu.',
+  },
+  {
+    question: 'Bisa upload font sendiri?',
+    answer:
+      'Ya! Kamu bisa upload font custom dalam format .ttf, .otf, .woff, atau .woff2. Font akan tersimpan di browser dan bisa digunakan kapan saja.',
+  },
+  {
+    question: 'Bisa pakai background kertas sendiri?',
+    answer:
+      'Tentu! Kamu bisa upload gambar kertas custom dan mengatur area tulisan sesuai kebutuhan.',
+  },
+  {
+    question: 'Hasilnya bisa diedit lagi?',
+    answer:
+      'Hasil diunduh dalam format PNG, jadi tidak bisa diedit lagi. Tapi kamu bisa simpan draft dan generate ulang kapan saja.',
+  },
+  {
+    question: 'Kenapa hasilnya beda tiap generate?',
+    answer:
+      'Itu karena jitter effect yang membuat tulisan terlihat natural. Variasi kecil pada posisi dan rotasi karakter membuatnya mirip tulisan tangan asli.',
+  },
+  {
+    question: 'Apakah bisa digunakan di mobile?',
+    answer:
+      'Ya, Nulisin responsive dan bisa digunakan di smartphone, tablet, maupun desktop.',
+  },
+  {
+    question: 'Font dan kertas custom hilang saat refresh?',
+    answer:
+      'Tidak, font dan kertas custom tersimpan di browser (localStorage) dan akan tetap ada meski kamu refresh atau tutup browser.',
+  },
+];

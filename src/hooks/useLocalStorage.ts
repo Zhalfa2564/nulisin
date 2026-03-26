@@ -3,6 +3,7 @@
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { captureError } from '@/lib/sentry';
 
 // Generic local storage hook
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void, () => void] {
@@ -21,7 +22,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       const item = window.localStorage.getItem(key);
       return item ? (JSON.parse(item) as T) : stableInitial;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      captureError(error, { source: 'localStorage_get', key });
       return stableInitial;
     }
   });
@@ -37,7 +38,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         return valueToStore;
       });
     } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
+      captureError(error, { source: 'localStorage_set', key });
     }
   }, [key]);
 
@@ -49,7 +50,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       }
       setStoredValue(stableInitial);
     } catch (error) {
-      console.warn(`Error removing localStorage key "${key}":`, error);
+      captureError(error, { source: 'localStorage_remove', key });
     }
   }, [key, stableInitial]);
 
@@ -60,8 +61,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         if (event.newValue !== null) {
           try {
             setStoredValue(JSON.parse(event.newValue));
-          } catch {
-            console.warn(`Error parsing storage event for key "${key}"`);
+          } catch (error) {
+            captureError(error, { source: 'localStorage_storage_event_parse', key });
           }
         } else {
           // Item was removed from another tab — reset to initial value

@@ -9,14 +9,20 @@ import { exportToPNG, generateExport } from '@/lib/rendering/handwritingEngine';
 import { getFontById } from '@/lib/fonts/defaultFonts';
 import { getPaperById } from '@/lib/templates/defaultPapers';
 import { useCustomFonts, useCustomPapers } from '@/hooks/useLocalStorage';
+import { useDocumentHead } from '@/hooks/useDocumentHead';
+import { pageMeta } from '@/lib/seo/meta';
 import type { FontProfile, PaperTemplate } from '@/types';
+import { Footer } from '@/components/marketing/Footer';
 import { defaultFonts } from '@/lib/fonts/defaultFonts';
 import { defaultPapers } from '@/lib/templates/defaultPapers';
 import { toast } from 'sonner';
+import { trackEvent } from '@/lib/analytics';
+import { captureError } from '@/lib/sentry';
 import { Pen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const GeneratorPage: React.FC = () => {
+  useDocumentHead(pageMeta.generator);
   // Form state
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
@@ -86,8 +92,7 @@ export const GeneratorPage: React.FC = () => {
         // Skip if already loaded in this session
         if (document.fonts.check(`16px "${font.name}"`)) continue;
         try {
-          const fontSource = font.source.startsWith('data:') ? font.source : `url(${font.source})`;
-          const fontFace = new FontFace(font.name, `url("${fontSource}")`);
+          const fontFace = new FontFace(font.name, `url(${font.source})`);
           await fontFace.load();
           document.fonts.add(fontFace);
         } catch (error) {
@@ -125,10 +130,13 @@ export const GeneratorPage: React.FC = () => {
       if (result.success) {
         exportToPNG(exportCanvasRef.current, `nulisin-${Date.now()}.png`);
         toast.success('Gambar berhasil diunduh!');
+        trackEvent('download_png', { status: 'success' });
       } else {
         toast.error(result.error || 'Gagal mengekspor gambar');
+        trackEvent('download_png', { status: 'failed' });
       }
     } catch (error) {
+      captureError(error, { source: 'export_png' });
       toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat mengekspor');
     } finally {
       setIsDownloading(false);
@@ -136,7 +144,7 @@ export const GeneratorPage: React.FC = () => {
   }, [name, date, content, currentFont, currentPaper]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 via-white to-orange-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -167,7 +175,7 @@ export const GeneratorPage: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left panel - Form */}
           <div className="order-2 lg:order-1">
@@ -223,6 +231,8 @@ export const GeneratorPage: React.FC = () => {
         ref={exportCanvasRef}
         style={{ display: 'none' }}
       />
+      
+      <Footer />
     </div>
   );
 };

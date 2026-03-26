@@ -4,23 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Primary Meta Tags -->
-    <title>Nulisin - Generator Tulisan Tangan Digital</title>
-    <meta name="title" content="Nulisin - Generator Tulisan Tangan Digital" />
-    <meta name="description" content="Ubah teks biasa jadi tulisan tangan digital yang natural, rapi, dan siap diunduh dalam hitungan detik. Gratis, tanpa watermark, tanpa daftar." />
+    <!-- Primary Meta Tags (fallback — overridden per-route by useDocumentHead) -->
+    <title>Nulisin — Generator Tulisan Tangan Digital</title>
+    <meta name="description" content="Nulisin membantu kamu mengubah teks biasa menjadi tulisan tangan digital yang natural, rapi, dan siap diunduh langsung dari browser." />
     <meta name="keywords" content="generator tulisan tangan, tulisan tangan digital, tulisan tangan online, buat tulisan tangan online, generator handwriting, tulisan tangan indonesia, font tulisan tangan, kertas tulisan tangan digital" />
     <meta name="author" content="Nulisin" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="Indonesian" />
     
-    <!-- Canonical URL -->
+    <!-- Canonical URL (overridden per-route) -->
     <link rel="canonical" href="https://nulisin.app" />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook (overridden per-route) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://nulisin.app" />
-    <meta property="og:title" content="Nulisin - Generator Tulisan Tangan Digital" />
-    <meta property="og:description" content="Ubah teks biasa jadi tulisan tangan digital yang natural, rapi, dan siap diunduh dalam hitungan detik." />
+    <meta property="og:title" content="Nulisin — Generator Tulisan Tangan Digital" />
+    <meta property="og:description" content="Ketik aja, biar kelihatan kayak nulis." />
     <meta property="og:image" content="https://nulisin.app/og-image.png" />
     <meta property="og:site_name" content="Nulisin" />
     <meta property="og:locale" content="id_ID" />
@@ -28,8 +27,8 @@
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://nulisin.app" />
-    <meta property="twitter:title" content="Nulisin - Generator Tulisan Tangan Digital" />
-    <meta property="twitter:description" content="Ubah teks biasa jadi tulisan tangan digital yang natural, rapi, dan siap diunduh dalam hitungan detik." />
+    <meta property="twitter:title" content="Nulisin — Generator Tulisan Tangan Digital" />
+    <meta property="twitter:description" content="Ketik aja, biar kelihatan kayak nulis." />
     <meta property="twitter:image" content="https://nulisin.app/og-image.png" />
     
     <!-- Favicon -->
@@ -51,16 +50,30 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- JSON-LD Structured Data for SEO -->
+
+    <!-- JSON-LD: WebSite -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "WebSite",
       "name": "Nulisin",
-      "description": "Ubah teks biasa jadi tulisan tangan digital yang natural, rapi, dan siap diunduh dalam hitungan detik. Gratis, tanpa watermark, tanpa daftar.",
+      "alternateName": "Nulisin Generator Tulisan Tangan",
       "url": "https://nulisin.app",
-      "applicationCategory": "UtilityApplication",
-      "operatingSystem": "Any",
+      "description": "Nulisin membantu kamu mengubah teks biasa menjadi tulisan tangan digital yang natural, rapi, dan siap diunduh langsung dari browser.",
+      "inLanguage": "id"
+    }
+    </script>
+
+    <!-- JSON-LD: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Nulisin",
+      "description": "Generator tulisan tangan digital berbasis web. Ketik teks biasa, pilih font dan template kertas, lalu unduh hasil tulisan tangan digital dalam format PNG.",
+      "url": "https://nulisin.app",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Web browser (Chrome, Firefox, Safari, Edge)",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -71,6 +84,80 @@
         "@type": "Organization",
         "name": "Nulisin"
       }
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Apakah Nulisin gratis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ya, Nulisin sepenuhnya gratis untuk digunakan. Tidak ada biaya tersembunyi atau langganan."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Apakah tulisanku tersimpan di server?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tidak. Semua proses terjadi di browser kamu. Teks dan hasil generate tidak dikirim ke server mana pun. Draft hanya tersimpan secara lokal di perangkatmu."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Bisa upload font sendiri?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ya! Kamu bisa upload font custom dalam format .ttf, .otf, .woff, atau .woff2. Font akan tersimpan di browser dan bisa digunakan kapan saja."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Bisa pakai background kertas sendiri?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tentu! Kamu bisa upload gambar kertas custom dan mengatur area tulisan sesuai kebutuhan."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Hasilnya bisa diedit lagi?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Hasil diunduh dalam format PNG, jadi tidak bisa diedit lagi. Tapi kamu bisa simpan draft dan generate ulang kapan saja."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Kenapa hasilnya beda tiap generate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Itu karena jitter effect yang membuat tulisan terlihat natural. Variasi kecil pada posisi dan rotasi karakter membuatnya mirip tulisan tangan asli."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Apakah bisa digunakan di mobile?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ya, Nulisin responsive dan bisa digunakan di smartphone, tablet, maupun desktop."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Font dan kertas custom hilang saat refresh?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tidak, font dan kertas custom tersimpan di browser (localStorage) dan akan tetap ada meski kamu refresh atau tutup browser."
+          }
+        }
+      ]
     }
     </script>
   </body>

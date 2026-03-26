@@ -300,10 +300,13 @@ const renderTextBlock = (
   const startY = zone.y + effectivePadding.top;
 
   // Wrap text using the scale-independent measurement context (Part B)
-  const lines = wrapText(measureCtx, text, effectiveWidth, font.letterSpacing);
+  const lines = wrapText(measureCtx, text, effectiveWidth, font.letterSpacing)
+    .filter((line) => line.length > 0); // Filter empty lines to prevent blank rendering artifacts
   
-  // Enforce paper.lineHeight for content, fallback to font profile spacing for headers
-  const lineHeight = isContentZone && paper.lineHeight ? paper.lineHeight : (fontSize * font.lineHeightMultiplier);
+  // Enforce paper.lineHeight for content, fallback to font profile spacing for headers.
+  // Clamp to minimum 8px to prevent zero/negative values from crashing layout.
+  const rawLineHeight = isContentZone && paper.lineHeight ? paper.lineHeight : (fontSize * font.lineHeightMultiplier);
+  const lineHeight = Math.max(8, rawLineHeight);
 
   // Compute maximum visible lines and detect overflow accurately (Part C)
   const maxVisibleLines = Math.max(1, Math.floor(effectiveHeight / lineHeight));

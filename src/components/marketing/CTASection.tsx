@@ -39,7 +39,7 @@ export const CTASection: React.FC = () => {
             size="lg"
             className="bg-white text-amber-600 hover:bg-gray-100 px-10 h-14 text-lg font-semibold group shadow-xl shadow-black/10"
           >
-            Mulai Sekarang
+            Mulai Nulis Sekarang
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </Link>

@@ -6,6 +6,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import { X, Check, AlertCircle, FileType, Trash2 } from 'lucide-react';
 import { validateFontFile } from '@/lib/fonts/defaultFonts';
 import { useCustomFonts } from '@/hooks/useLocalStorage';
+import { trackEvent } from '@/lib/analytics';
+import { captureError } from '@/lib/sentry';
 import type { FontProfile } from '@/types';
 
 interface FontUploaderProps {
@@ -91,8 +93,7 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
         // Load the font — pass data URL as ArrayBuffer source for
         // reliable cross-browser handling (avoids url() escaping issues)
         try {
-          const fontSource = source.startsWith('data:') ? source : `url(${source})`;
-          const fontFace = new FontFace(fontName, `url("${fontSource}")`);
+          const fontFace = new FontFace(fontName, `url(${source})`);
           await fontFace.load();
           document.fonts.add(fontFace);
 
@@ -104,8 +105,10 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
           });
 
           setSuccess(`Font "${fontName}" berhasil ditambahkan!`);
+          trackEvent('upload_custom_font', { font_name: fontName });
           onFontAdded?.(fontProfile);
-        } catch {
+        } catch (err) {
+          captureError(err, { source: 'font_upload', font_name: fontName });
           setError('Gagal memuat font. Pastikan file font valid dan tidak corrupt.');
         }
 
@@ -156,6 +159,7 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
     if (window.confirm(`Hapus font custom "${name}"?`)) {
       removeFont(id);
       onFontDeleted?.(id);
+      trackEvent('delete_custom_font');
       setSuccess(`Font "${name}" berhasil dihapus.`);
       setError(null);
     }
@@ -208,6 +212,9 @@ export const FontUploader: React.FC<FontUploaderProps> = ({ onFontAdded, onFontD
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
               .ttf, .otf, .woff, .woff2 (maks. 5MB)
+            </p>
+            <p className="text-[10px] text-gray-400 mt-3 pt-3 border-t">
+              File disimpan secara lokal di perambanmu.
             </p>
           </div>
         </div>

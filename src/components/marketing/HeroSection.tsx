@@ -6,6 +6,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { trackEvent } from '@/lib/analytics';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -43,12 +44,12 @@ export const HeroSection: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/generator">
+              <Link to="/generator" onClick={() => trackEvent('cta_hero_click')}>
                 <Button
                   size="lg"
                   className="bg-amber-600 hover:bg-amber-700 text-white px-8 h-12 text-base group"
                 >
-                  Coba Sekarang
+                  Mulai Nulis Sekarang
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>

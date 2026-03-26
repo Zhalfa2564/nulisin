@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { validatePaperFile, checkImageDimensions } from '@/lib/templates/defaultPapers';
 import { useCustomPapers } from '@/hooks/useLocalStorage';
+import { trackEvent } from '@/lib/analytics';
 import type { PaperTemplate, ZoneConfig } from '@/types';
 import {
   Dialog,
@@ -209,6 +210,7 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
     });
 
     setSuccess(`Template "${paperName.trim()}" berhasil ditambahkan!`);
+    trackEvent('save_custom_paper', { paper_name: paperName.trim() });
     onPaperAdded?.(paperTemplate);
     setShowEditor(false);
     setPreviewImage(null);
@@ -242,6 +244,7 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
     if (window.confirm(`Hapus template kertas "${name}"?`)) {
       removePaper(id);
       onPaperDeleted?.(id);
+      trackEvent('delete_custom_paper');
       setSuccess(`Template "${name}" berhasil dihapus.`);
       setError(null);
     }
@@ -293,7 +296,10 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
               Seret file atau klik untuk memilih
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
-              .jpg, .png (maks. 10MB)
+              .jpg, .png, .webp (maks. 5MB)
+            </p>
+            <p className="text-[10px] text-gray-400 mt-3 pt-3 border-t">
+              Gambar hanya diproses secara lokal di perambanmu.
             </p>
           </div>
         </div>
@@ -432,27 +438,31 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
                     </span>
                     <Input
                       type="number"
+                      min={0}
                       placeholder="X"
                       value={zones[zoneKey].x}
-                      onChange={(e) => updateZone(zoneKey, 'x', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateZone(zoneKey, 'x', Math.max(0, parseInt(e.target.value) || 0))}
                     />
                     <Input
                       type="number"
+                      min={0}
                       placeholder="Y"
                       value={zones[zoneKey].y}
-                      onChange={(e) => updateZone(zoneKey, 'y', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateZone(zoneKey, 'y', Math.max(0, parseInt(e.target.value) || 0))}
                     />
                     <Input
                       type="number"
+                      min={1}
                       placeholder="Lebar"
                       value={zones[zoneKey].width}
-                      onChange={(e) => updateZone(zoneKey, 'width', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateZone(zoneKey, 'width', Math.max(1, parseInt(e.target.value) || 1))}
                     />
                     <Input
                       type="number"
+                      min={1}
                       placeholder="Tinggi"
                       value={zones[zoneKey].height}
-                      onChange={(e) => updateZone(zoneKey, 'height', parseInt(e.target.value) || 0)}
+                      onChange={(e) => updateZone(zoneKey, 'height', Math.max(1, parseInt(e.target.value) || 1))}
                     />
                   </div>
                 ))}
@@ -464,27 +474,31 @@ export const PaperUploader: React.FC<PaperUploaderProps> = ({ onPaperAdded, onPa
                 <div className="grid grid-cols-4 gap-2">
                   <Input
                     type="number"
+                    min={0}
                     placeholder="Atas"
                     value={padding.top}
-                    onChange={(e) => updatePadding('top', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updatePadding('top', Math.max(0, parseInt(e.target.value) || 0))}
                   />
                   <Input
                     type="number"
+                    min={0}
                     placeholder="Kanan"
                     value={padding.right}
-                    onChange={(e) => updatePadding('right', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updatePadding('right', Math.max(0, parseInt(e.target.value) || 0))}
                   />
                   <Input
                     type="number"
+                    min={0}
                     placeholder="Bawah"
                     value={padding.bottom}
-                    onChange={(e) => updatePadding('bottom', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updatePadding('bottom', Math.max(0, parseInt(e.target.value) || 0))}
                   />
                   <Input
                     type="number"
+                    min={0}
                     placeholder="Kiri"
                     value={padding.left}
-                    onChange={(e) => updatePadding('left', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updatePadding('left', Math.max(0, parseInt(e.target.value) || 0))}
                   />
                 </div>
               </div>

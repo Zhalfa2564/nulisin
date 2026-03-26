@@ -6,6 +6,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { FontProfile, PaperTemplate } from '@/types';
 import { generatePreview, preloadFontForRender } from '@/lib/rendering/handwritingEngine';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 interface CanvasPreviewProps {
   name: string;
@@ -31,6 +32,13 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
   const [hasOverflow, setHasOverflow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fontLoaded, setFontLoaded] = useState(false);
+
+  // Track overflow only when it first becomes true for a given content
+  useEffect(() => {
+    if (hasOverflow && !isLoading && !error) {
+      trackEvent('overflow_warning', { length: content.length });
+    }
+  }, [hasOverflow, isLoading, error, content.length]);
 
   // Preload font when it changes
   useEffect(() => {
@@ -165,8 +173,15 @@ export const CanvasPreview: React.FC<CanvasPreviewProps> = ({
         <div className="absolute bottom-2 left-2 right-2 bg-amber-100 border border-amber-300 rounded-lg p-2 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <p className="text-amber-800 text-xs">
-            Isi tulisan kepanjangan. Coba kurangi atau pilih template lain.
+            Tulisan melebihi area kertas. Kurangi isi, atau pilih template dengan area isi yang lebih besar.
           </p>
+        </div>
+      )}
+
+      {/* Character count warning */}
+      {content.length > 3000 && !hasOverflow && !isLoading && !error && (
+        <div className="absolute bottom-2 right-2 bg-gray-900/70 text-white text-[10px] px-2 py-1 rounded-md">
+          {content.length.toLocaleString()} karakter — teks cukup panjang
         </div>
       )}
 

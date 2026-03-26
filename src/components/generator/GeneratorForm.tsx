@@ -17,8 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RotateCcw, Download, Save, Type, Palette, Settings } from 'lucide-react';
 import type { FontProfile, PaperTemplate } from '@/types';
-import { defaultFonts } from '@/lib/fonts/defaultFonts';
-import { defaultPapers } from '@/lib/templates/defaultPapers';
+import { defaultFonts, getFontById } from '@/lib/fonts/defaultFonts';
+import { defaultPapers, getPaperById } from '@/lib/templates/defaultPapers';
 import { useCustomFonts, useCustomPapers, useDraftAutosave, useDebounce } from '@/hooks/useLocalStorage';
 import { FontUploader } from './FontUploader';
 import { PaperUploader } from './PaperUploader';
@@ -54,7 +54,7 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
 }) => {
   const { fonts: customFonts, addFont: addCustomFont } = useCustomFonts();
   const { papers: customPapers, addPaper: addCustomPaper } = useCustomPapers();
-  const { saveDraft, draft, getDraftAge } = useDraftAutosave();
+  const { saveDraft, draft, getDraftAge, clearDraft } = useDraftAutosave();
   const [activeTab, setActiveTab] = useState('teks');
   const [showDraftSaved, setShowDraftSaved] = useState(false);
 
@@ -93,8 +93,11 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
         setName(draft.name);
         setDate(draft.date);
         setContent(draft.content);
-        setSelectedFontId(draft.selectedFontId);
-        setSelectedPaperId(draft.selectedPaperId);
+        // Only restore font/paper IDs if they still exist; fall back to defaults
+        const allCustomFontProfiles = customFonts.map((f) => ({ ...f, defaultSize: 26, lineHeightMultiplier: 1.7, letterSpacing: 0.4, jitterSettings: { xJitter: 0, yJitter: 0, rotationJitter: 0, spacingJitter: 0, baselineShift: 0 }, isCustom: true }) as import('@/types').FontProfile);
+        const allCustomPaperTemplates = customPapers.map((p) => ({ ...p, isCustom: true }) as import('@/types').PaperTemplate);
+        setSelectedFontId(getFontById(draft.selectedFontId, allCustomFontProfiles) ? draft.selectedFontId : defaultFonts[0].id);
+        setSelectedPaperId(getPaperById(draft.selectedPaperId, allCustomPaperTemplates) ? draft.selectedPaperId : defaultPapers[0].id);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,7 +109,8 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
     setContent('');
     setSelectedFontId(defaultFonts[0].id);
     setSelectedPaperId(defaultPapers[0].id);
-  }, [setName, setDate, setContent, setSelectedFontId, setSelectedPaperId]);
+    clearDraft();
+  }, [setName, setDate, setContent, setSelectedFontId, setSelectedPaperId, clearDraft]);
 
   const handleFontAdded = useCallback((font: FontProfile) => {
     addCustomFont({
@@ -297,9 +301,13 @@ export const GeneratorForm: React.FC<GeneratorFormProps> = ({
           ) : (
             <Download className="w-4 h-4 mr-2" />
           )}
-          Unduh PNG
+          <span>{isDownloading ? 'Mengekspor...' : 'Unduh PNG'}</span>
         </Button>
       </div>
+      
+      <p className="text-center text-xs text-gray-400 mt-4">
+        Draft tulisan secara otomatis tersimpan lokal di perambanmu.
+      </p>
     </div>
   );
 };
